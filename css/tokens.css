@@ -1,0 +1,33 @@
+/* Direction B "Instrument" tokens. Names are a contract: change values only. */
+:root{
+color-scheme:dark;
+/* ground and surfaces: blue-black, one step apart */
+--bg:#07090F;--panel:#0B0E16;--panel-2:#10141F;--line:#1A1F2B;--line-2:#273041;
+/* ink */
+--ink:#E8EAF0;--ink-hi:#FFFFFF;--mute:#8A93A6;--faint:#747E93;
+/* one interactive accent (blue, structure + focus); teal = "now/live" only; --alert reserved for errors, never a sphere */
+--signal:#4C82FF;--signal-2:#2FD3B0;--alert:#FF5C77;
+/* blue for light grounds only (paper band, CV) */
+--signal-ink:#2A5FE0;
+/* 8 spheres, equal visual weight on --bg, used only inside the visualisation and as 8px keys */
+--s-eng:#6F7CFF;--s-res:#9A8CFF;--s-med:#FF5C77;--s-soc:#B4BCCB;--s-ent:#FFB547;--s-com:#8BD66B;--s-art:#E6C79C;--s-edu:#5CC8FF;
+/* light band (Beyond code only) */
+--paper:#EDEEF1;--paper-ink:#0B0E16;--paper-mute:#5A6274;--paper-line:#CDD1D9;
+/* families */
+--f-serif:"Cormorant Garamond","Cormorant",Georgia,serif;--f-display:"Space Grotesk",system-ui,sans-serif;--f-text:"Inter",system-ui,sans-serif;--f-mono:"JetBrains Mono",ui-monospace,monospace;
+/* type scale: 5 sizes. size / line-height / tracking */
+--t-xl:clamp(48px,5.6vw,84px);--t-xl-lh:.92;--t-xl-tr:-.045em;   /* name, one per page */
+--t-l:clamp(32px,3.4vw,44px);--t-l-lh:1.04;--t-l-tr:-.03em;      /* section titles, big metrics */
+--t-m:20px;--t-m-lh:1.45;--t-m-tr:-.01em;                         /* lead, row titles */
+--t-s:16px;--t-s-lh:1.6;--t-s-tr:0;                               /* body */
+--t-xs:12px;--t-xs-lh:1.5;--t-xs-tr:.01em;                        /* mono captions, labels */
+--t-ui:14px;                                                       /* UI chrome: nav, buttons */
+/* spacing: 4px base */
+--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;--sp-8:64px;--sp-9:96px;--sp-10:128px;
+/* grid */
+--max:1240px;--cols:12;--gutter:24px;--pad:max(24px,4vw);
+/* radii: almost square, instrument-like */
+--r-0:0;--r-1:2px;--r-2:6px;--r-pill:999px;
+/* motion */
+--d-fast:120ms;--d-base:200ms;--d-slow:600ms;--d-intro:1200ms;--ease:cubic-bezier(.2,.7,.2,1);
+}

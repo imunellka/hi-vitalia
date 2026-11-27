@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://hi-vitalia.com/sitemap.xml
