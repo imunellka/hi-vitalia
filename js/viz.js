@@ -46,8 +46,8 @@
 .sky .fut{opacity:0!important;pointer-events:none}
 .sky .pulse{transform-box:fill-box;transform-origin:center;animation:skyp 2.6s ease-in-out infinite}
 @keyframes skyp{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:0;transform:scale(1.8)}}
-.sky .cl.tk{animation:skytw var(--tw,6s) ease-in-out var(--twd,0s) infinite}
-@keyframes skytw{0%,100%{opacity:var(--o0,.2)}50%{opacity:.8}}
+.sky .cl.tk{transform-box:fill-box;transform-origin:center;stroke:currentColor;stroke-width:0;stroke-opacity:0;animation:skytw var(--tw,6s) ease-in-out var(--twd,0s) infinite}
+@keyframes skytw{0%,100%{opacity:var(--o0,.2);transform:scale(1);stroke-width:0;stroke-opacity:0}50%{opacity:.9;transform:scale(2.5);stroke-width:1px;stroke-opacity:.3}}
 .sky .gl{pointer-events:none}
 .sky.off .cl.tk,.sky.off .pulse{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.sky .pulse,.sky .cl.tk{animation:none}.sky .gl{display:none}.sky [data-s],.sky .traj,.sky .lab,.sky .cg,.sky .tw{transition:none}.sky .cg.em{transform:none}}
@@ -528,20 +528,21 @@
 
     // occasional glint on a random visible dust point; never on events, never while hidden or in reduced motion
     let glT = 0, inView = false;
-    const STAR = 'M0,-5.5L.9,-.9L5.5,0L.9,.9L0,5.5L-.9,.9L-5.5,0L-.9,-.9Z';
+    const STAR = 'M0,-8L1.2,-1.2L8,0L1.2,1.2L0,8L-1.2,1.2L-8,0L-1.2,-1.2Z';
     function glint() {
-      glT = setTimeout(glint, 2000 + Math.random() * 3000);
+      glT = setTimeout(glint, 1200 + Math.random() * 1800);
       if (!inView || document.hidden || !gGl || !gGl.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (gGl.childElementCount >= 2) return; // at most two glints at a time
       const fs = svg.getAttribute('data-fs');
       const pool = svg.querySelectorAll((fs ? '.cg[data-s="' + fs + '"]' : '.cg') + ' .cl:not(.fut)');
       if (!pool.length) return;
       const d = pool[Math.floor(Math.random() * pool.length)], k = d.parentNode.dataset.s;
       const x = +d.getAttribute('cx'), y = +d.getAttribute('cy');
       const g = el('g', { style: 'transform-origin:0 0' }, gGl);
-      el('circle', { r: 3.2, style: 'fill:var(--s-' + k + ')', opacity: .35 }, g);
+      el('circle', { r: 4.5, style: 'fill:var(--s-' + k + ')', opacity: .35 }, g);
       el('path', { d: STAR, style: 'fill:var(--ink-hi,#fff)' }, g);
       const tf = s => 'translate(' + x + 'px,' + y + 'px) scale(' + s + ') rotate(' + (s * 45) + 'deg)';
-      const an = g.animate([{ transform: tf(0), opacity: 0 }, { transform: tf(1), opacity: .9, offset: .35 }, { transform: tf(0), opacity: 0 }], { duration: 1100, easing: 'ease-in-out' });
+      const an = g.animate([{ transform: tf(0), opacity: 0 }, { transform: tf(1), opacity: .9, offset: .3 }, { transform: tf(.8), opacity: .7, offset: .55 }, { transform: tf(0), opacity: 0 }], { duration: 1600, easing: 'ease-in-out' });
       an.onfinish = () => g.remove();
     }
     const gio = new IntersectionObserver(es => { inView = es[0].isIntersecting; root.classList.toggle('off', !inView); }); gio.observe(root);
