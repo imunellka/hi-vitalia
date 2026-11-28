@@ -366,3 +366,15 @@ html{overflow-x:clip}
 .mpop.dismissed{opacity:0!important;visibility:hidden!important}
 .ptip{text-align:left}
 @media (max-width:600px){.mpop{max-width:calc(100vw - 48px)}}
+
+/* Round 13: linked metrics (8+ → GitHub, Patent → PatentScope) and inline patent mentions */
+.metric a{border-bottom:1px solid transparent;transition:border-color var(--d-fast)}
+.metric a:hover,.metric a:focus-visible{border-bottom-color:currentColor}
+.ilink{border-bottom:1px solid var(--line-2);transition:border-color var(--d-fast),color var(--d-fast)}
+.ilink:hover,.ilink:focus-visible{border-color:var(--signal);color:var(--ink-hi)}
+.band-light .ilink{border-color:var(--paper-line)}
+.band-light .ilink:hover,.band-light .ilink:focus-visible{border-color:var(--signal-ink)}
+
+/* Round 14: company name should outweigh the metric figures beside it, not read smaller */
+.wrow .meta h3{font-size:clamp(26px,2.4vw,34px);line-height:1.15}
+@media (max-width:600px){.wrow .meta h3{font-size:clamp(23px,7vw,28px)}}
