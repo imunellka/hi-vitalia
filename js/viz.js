@@ -46,7 +46,10 @@
 .sky .fut{opacity:0!important;pointer-events:none}
 .sky .pulse{transform-box:fill-box;transform-origin:center;animation:skyp 2.6s ease-in-out infinite}
 @keyframes skyp{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:0;transform:scale(1.8)}}
-@media (prefers-reduced-motion:reduce){.sky .pulse{animation:none}.sky [data-s],.sky .traj,.sky .lab,.sky .cg,.sky .tw{transition:none}.sky .cg.em{transform:none}}
+.sky .cl.tk{animation:skytw var(--tw,6s) ease-in-out var(--twd,0s) infinite}
+@keyframes skytw{0%,100%{opacity:var(--o0,.2)}50%{opacity:.8}}
+.sky .gl{pointer-events:none}
+@media (prefers-reduced-motion:reduce){.sky .pulse,.sky .cl.tk{animation:none}.sky .gl{display:none}.sky [data-s],.sky .traj,.sky .lab,.sky .cg,.sky .tw{transition:none}.sky .cg.em{transform:none}}
 .sky-hud{font-family:var(--f-mono);font-size:12px;line-height:1.5;color:var(--mute)}
 .sky-hud .k{color:var(--faint);display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .sky-hud .k i{width:8px;height:8px;display:inline-block;flex:none}
@@ -118,7 +121,7 @@
     let W = 0, H = 0, cx = 0, cy = 0, R = 0, r0 = 0, narrow = false;
     let time = T1 - 0.01, filt = null, hov = null, hovS = null, sel = opts.start || 'ozon', raf = null;
     const P = {};
-    let segs = [], marker = null, gConn = null, obst = [], rovEv = null, rovSL = null, lastPtr = 'mouse';
+    let segs = [], marker = null, gConn = null, gGl = null, obst = [], rovEv = null, rovSL = null, lastPtr = 'mouse';
 
     const ang = k => -Math.PI / 2 + Math.PI / 8 + ORDER.indexOf(k) * Math.PI / 4;
     const half = Math.PI / 8;
@@ -231,7 +234,9 @@
       cx = (opts.align === 'right' && W > H * 1.3) ? W - H / 2 : W / 2; cy = H / 2;
       svg.innerHTML = ''; segs = []; obst = [];
       root.style.setProperty('--ox', cx + 'px'); root.style.setProperty('--oy', cy + 'px');
-      const gBg = el('g', {}, svg), gCl = el('g', {}, svg), gHit = el('g', {}, svg), gTr = el('g', {}, svg);
+      const gBg = el('g', {}, svg), gCl = el('g', {}, svg);
+      gGl = el('g', { class: 'gl', 'aria-hidden': 'true' }, svg);
+      const gHit = el('g', {}, svg), gTr = el('g', {}, svg);
       gConn = el('g', { 'pointer-events': 'none' }, svg);
       const gEv = el('g', {}, svg), gLab = el('g', { 'pointer-events': 'none' }, svg), gAx = el('g', { 'pointer-events': 'none' }, svg), gSL = el('g', {}, svg);
 
@@ -260,13 +265,16 @@
         const gs = el('g', { 'data-s': k, class: 'cg', style: 'color:var(--s-' + k + ')' }, gCl);
         const maxT = list.length ? Math.max.apply(null, list.map(e => e.t)) + 0.6 : 2024;
         const gauss = () => (rnd() + rnd() + rnd() - 1.5) / 1.5;
+        const tw = mulberry(ORDER.indexOf(k) * 4271 + 11); // twinkle picks: separate stream, layout unchanged
         for (let i = 0; i < n; i++) {
           let a, r;
           if (rnd() < 0.6 && list.length) { const e = list[Math.floor(rnd() * list.length)], p = P[e.id]; a = p.a + gauss() * 0.17; r = p.r + gauss() * (R - r0) * 0.08; }
           else { a = ang(k) + gauss() * half * 0.85; r = r0 + Math.pow(rnd(), 0.6) * (rad(maxT) - r0); }
           a = Math.max(ang(k) - half * 0.95, Math.min(ang(k) + half * 0.95, a)); r = Math.max(r0 + 3, Math.min(R - 3, r));
           const [x, y] = pol(a, r), tt = unfrac((r - r0) / (R - r0));
-          el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: (0.6 + rnd() * 0.6).toFixed(2), class: 'cl', 'data-t': tt.toFixed(2), fill: 'currentColor', opacity: (0.14 + rnd() * 0.21).toFixed(2) }, gs);
+          const cr = (0.6 + rnd() * 0.6).toFixed(2), op = (0.14 + rnd() * 0.21).toFixed(2);
+          const c = el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: cr, class: 'cl', 'data-t': tt.toFixed(2), fill: 'currentColor', opacity: op }, gs);
+          if (tw() < 0.03) { c.classList.add('tk'); c.style.cssText = '--o0:' + op + ';--tw:' + (4 + tw() * 5).toFixed(1) + 's;--twd:-' + (tw() * 9).toFixed(1) + 's'; }
         }
       });
 
@@ -517,12 +525,32 @@
       const n = list[j]; rovEv = n.dataset.id; select(n.dataset.id); n.focus(); hov = n.dataset.id; apply();
     });
 
+    // occasional glint on a random visible dust point; never on events, never while hidden or in reduced motion
+    let glT = 0, inView = false;
+    const STAR = 'M0,-5.5L.9,-.9L5.5,0L.9,.9L0,5.5L-.9,.9L-5.5,0L-.9,-.9Z';
+    function glint() {
+      glT = setTimeout(glint, 2000 + Math.random() * 3000);
+      if (!inView || document.hidden || !gGl || !gGl.isConnected || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const fs = svg.getAttribute('data-fs');
+      const pool = svg.querySelectorAll((fs ? '.cg[data-s="' + fs + '"]' : '.cg') + ' .cl:not(.fut)');
+      if (!pool.length) return;
+      const d = pool[Math.floor(Math.random() * pool.length)], k = d.parentNode.dataset.s;
+      const x = +d.getAttribute('cx'), y = +d.getAttribute('cy');
+      const g = el('g', { style: 'transform-origin:0 0' }, gGl);
+      el('circle', { r: 3.2, style: 'fill:var(--s-' + k + ')', opacity: .35 }, g);
+      el('path', { d: STAR, style: 'fill:var(--ink-hi,#fff)' }, g);
+      const tf = s => 'translate(' + x + 'px,' + y + 'px) scale(' + s + ') rotate(' + (s * 45) + 'deg)';
+      const an = g.animate([{ transform: tf(0), opacity: 0 }, { transform: tf(1), opacity: .9, offset: .35 }, { transform: tf(0), opacity: 0 }], { duration: 1100, easing: 'ease-in-out' });
+      an.onfinish = () => g.remove();
+    }
+    const gio = new IntersectionObserver(es => { inView = es[0].isIntersecting; }); gio.observe(root);
+    glT = setTimeout(glint, 1500);
     const ro = new ResizeObserver(() => draw()); ro.observe(root);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
     draw();
     if (opts.intro && !matchMedia('(prefers-reduced-motion: reduce)').matches) { setTime(T0); play(); }
 
-    return { setTime: t => setTime(t), play, pause, filter, select, get time() { return time; }, destroy() { pause(); ro.disconnect(); window.removeEventListener('keydown', onKey, true); root.remove(); } };
+    return { setTime: t => setTime(t), play, pause, filter, select, get time() { return time; }, destroy() { pause(); clearTimeout(glT); gio.disconnect(); ro.disconnect(); window.removeEventListener('keydown', onKey, true); root.remove(); } };
   }
   g.mountSky = mountSky;
 })(window);
