@@ -164,7 +164,8 @@
 @media (hover:none){.langsw a{min-height:44px}}
 
 /* Work: metric strip like the brand CV, then two one-line bullets */
-.wrow .body{grid-column:4 / span 9}
+.wrow .meta{grid-column:1 / span 4}
+.wrow .body{grid-column:5 / span 8}
 .mstrip{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));border-top:1px solid var(--line-2);border-bottom:1px solid var(--line);margin:2px 0 var(--sp-4)}
 .mstrip .mc{padding:12px 16px 12px 0}
 .mstrip .mc + .mc{padding-left:16px;border-left:1px solid var(--line)}
