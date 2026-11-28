@@ -180,7 +180,7 @@
 
     // labels sit next to their own star: a short gap first, a visible leader only when needed, else dropped (the HUD covers it)
     function placeLabels(ids, gl) {
-      const boxes = narrow ? obst.filter(o => !o.path) : obst.slice();
+      const boxes = obst.slice(); // includes the path line: no label is drawn across it
       const fs = 12, cw = 7.2, pad = 3;
       const dots = E.map(e => ({ id: e.id, x: P[e.id].x - P[e.id].s - 3, y: P[e.id].y - P[e.id].s - 3, w: P[e.id].s * 2 + 6, h: P[e.id].s * 2 + 6 }));
       dots.push({ id: '_c', x: cx - r0 - 4, y: cy - r0 - 4, w: r0 * 2 + 8, h: r0 * 2 + 8 });
@@ -303,15 +303,37 @@
       el('rect', { x: -3.5, y: -3.5, width: 7, height: 7, style: 'fill:var(--signal-2)' }, marker);
 
       // year axis on the 9 o'clock spoke, centred on the spoke; flips below the axis if the path or a star is in the way
-      const evBoxes = E.map(e => ({ x: P[e.id].x - P[e.id].s - 2, y: P[e.id].y - P[e.id].s - 2, w: P[e.id].s * 2 + 4, h: P[e.id].s * 2 + 4 }));
+      const ep = narrow ? 7 : 2; // on phones, room for the selection ring and the 'now' pulse around a star
+      const evBoxes = E.map(e => ({ x: P[e.id].x - P[e.id].s - ep, y: P[e.id].y - P[e.id].s - ep, w: P[e.id].s * 2 + ep * 2, h: P[e.id].s * 2 + ep * 2 }));
       const hitAny = (b, list) => list.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
       const labs = (narrow ? [2022, 2025] : YEAR_LABELS).map(y => [y, String(y)]).concat([[NOW, L.now]]);
       let prevRight = Infinity;
-      labs.forEach(([y, s]) => {
+      if (narrow) {
+        // phones: the 9 o'clock spoke is crowded by the path, so each year label (now first) tries the eight
+        // sector-boundary spokes and sits on its own ring wherever that spot is clear of stars, path and other labels
+        const spokes = [Math.PI, 3 * Math.PI / 4, -3 * Math.PI / 4, Math.PI / 2, -Math.PI / 2, Math.PI / 4, -Math.PI / 4, 0];
+        const placed = [], m = 3;
+        const clear = b => b.x > 2 && b.x + b.w < W - 2 && b.y > 2 && b.y + b.h < H - 2 && !hitAny(b, evBoxes) && !hitAny(b, placed)
+          && !pathPts.some(q => q[0] > b.x - m && q[0] < b.x + b.w + m && q[1] > b.y - m && q[1] < b.y + b.h + m);
+        [[NOW, L.now], [2022, '2022'], [2025, '2025']].forEach(([y, s]) => {
+          const wd = s.length * 7.2;
+          for (const a of spokes) {
+            const [px, py] = pol(a, rad(y));
+            const b = [py + 4, py - 5, py + 15].map(by => ({ x: px - wd / 2 - 2, y: by - 11, w: wd + 4, h: 14, by })).find(clear);
+            if (!b) continue;
+            const t = el('text', { class: 'ax', x: px.toFixed(1), y: b.by.toFixed(1), 'text-anchor': 'middle' }, gAx); t.textContent = s;
+            if (s === L.now) t.style.fill = 'var(--signal-2)';
+            placed.push(b); obst.push({ x: b.x, y: b.y, w: b.w, h: b.h });
+            return;
+          }
+        });
+      } else labs.forEach(([y, s]) => {
         const r = y === T0 ? r0 + 2 : rad(y), [x] = pol(AXIS_A, r), wd = s.length * 7.2;
-        if (x + wd / 2 > prevRight - 4) return; // too close to the previous (inner) label
+        if (x + wd / 2 > prevRight - (narrow ? 10 : 4)) return; // too close to the previous (inner) label
         const cand = [cy - 5, cy + 15].map(by => ({ x: x - wd / 2 - 2, y: by - 11, w: wd + 4, h: 14, by }));
-        const pick = cand.find(b => !hitAny(b, evBoxes) && !pathPts.some(q => q[0] > b.x && q[0] < b.x + b.w && q[1] > b.y && q[1] < b.y + b.h)) || cand[0];
+        const m = narrow ? 3 : 0; // clearance from the 1.5px path stroke
+        const pick = cand.find(b => !hitAny(b, evBoxes) && !pathPts.some(q => q[0] > b.x - m && q[0] < b.x + b.w + m && q[1] > b.y - m && q[1] < b.y + b.h + m)) || (narrow ? null : cand[0]);
+        if (!pick) return;
         const t = el('text', { class: 'ax', x: x.toFixed(1), y: pick.by.toFixed(1), 'text-anchor': 'middle' }, gAx); t.textContent = s;
         if (s === L.now) t.style.fill = 'var(--signal-2)';
         obst.push({ x: pick.x, y: pick.y, w: pick.w, h: pick.h });
