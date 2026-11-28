@@ -494,6 +494,29 @@
       }
     }
 
+    // Playback runs along the drawn path at constant speed, not at constant years per second. Milestones are
+    // sparse early (2017-2021 is one segment) and dense late (six between 2024 and 2026), so equal time per year
+    // crawled at the start and raced at the end. Each segment now gets time in proportion to its length.
+    // A short lead-in before the first milestone and a tail after the last keep their own small share.
+    const PRE = 0.03, POST = 0.06;
+    function lens() { const tot = segs.reduce((a, s) => a + s.L, 0); return { tot, pre: tot * PRE, post: tot * POST, all: tot * (1 + PRE + POST) }; }
+    function progToTime(p) { // p in [0,1] of the whole run -> plot time
+      if (!segs.length) return T0 + p * (T1 - 0.01 - T0);
+      const { pre, post, all } = lens(), tA = segs[0].t1, tB = segs[segs.length - 1].t2;
+      let l = Math.max(0, Math.min(1, p)) * all;
+      if (l <= pre) return T0 + (l / pre) * (tA - T0);
+      l -= pre;
+      for (const s of segs) { if (l <= s.L) return s.t1 + (l / s.L) * (s.t2 - s.t1); l -= s.L; }
+      return tB + Math.min(1, l / post) * (T1 - 0.01 - tB);
+    }
+    function timeToProg(t) { // inverse, so play resumes from where the slider is
+      if (!segs.length) return (t - T0) / (T1 - 0.01 - T0);
+      const { pre, post, all } = lens(), tA = segs[0].t1, tB = segs[segs.length - 1].t2;
+      if (t <= tA) return Math.max(0, (t - T0) / (tA - T0)) * pre / all;
+      let l = pre;
+      for (const s of segs) { if (t <= s.t2) return (l + (t - s.t1) / (s.t2 - s.t1) * s.L) / all; l += s.L; }
+      return Math.min(1, (l + (t - tB) / (T1 - 0.01 - tB) * post) / all);
+    }
     function play() {
       if (raf) return;
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) { // no animation: each press jumps to the next milestone
@@ -502,9 +525,9 @@
         else setTime(byId[nxt].t);
         if (opts.onEnd) opts.onEnd(); return;
       }
-      const from = time >= 2027 ? T0 : time, dur = 9000 * (T1 - from) / (T1 - T0), t0 = performance.now();
+      const p0 = time >= 2027 ? 0 : timeToProg(time), dur = 9000 * (1 - p0), t0 = performance.now();
       const step = n => {
-        const k = Math.min(1, (n - t0) / dur); setTime(from + (T1 - 0.01 - from) * k);
+        const k = Math.min(1, (n - t0) / dur); setTime(progToTime(p0 + (1 - p0) * k));
         if (k < 1) raf = requestAnimationFrame(step);
         else { raf = null; setTime(T1, true); setSel(path[path.length - 1], true); apply(); if (opts.onTime) opts.onTime(time); if (opts.onEnd) opts.onEnd(); }
       };
