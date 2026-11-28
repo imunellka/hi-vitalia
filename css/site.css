@@ -386,3 +386,10 @@ html{overflow-x:clip}
 
 /* Round 17: smooth scrolling for in-page links (nav, CTA, back to top); off for reduced motion */
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+
+/* Round 18: Beyond code — each label reads as its own cell: hairline between the two columns */
+@media (min-width:721px){
+ .labels{column-gap:0}
+ .label:nth-child(odd){padding-right:var(--sp-6)}
+ .label:nth-child(even){padding-left:var(--sp-6);border-left:1px solid var(--paper-line)}
+}
