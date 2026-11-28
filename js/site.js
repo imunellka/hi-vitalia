@@ -126,3 +126,31 @@ document.querySelectorAll('a[data-lang-switch]').forEach(a => a.addEventListener
     const m=b.closest('.metric');m.addEventListener('pointerenter',()=>p.classList.remove('dismissed'));b.addEventListener('focus',()=>p.classList.remove('dismissed'));
   }
 }
+
+/* Reload keeps your place. An in-page link leaves #section in the URL, and on reload the browser jumps there
+   instead of back to where you were. Remember the scroll position per page and restore it on reload and
+   back/forward. A fresh visit to a link with #section still goes to that section. */
+{
+  const KEY = 'scrollY:' + location.pathname;
+  const navType = (performance.getEntriesByType('navigation')[0] || {}).type;
+  let saved = NaN;
+  try { saved = parseFloat(sessionStorage.getItem(KEY)); } catch (e) {}
+  const returning = (navType === 'reload' || navType === 'back_forward') && isFinite(saved);
+  let restoring = returning;
+  const save = () => { if (!restoring) try { sessionStorage.setItem(KEY, String(Math.round(scrollY))); } catch (e) {} };
+  let st = 0;
+  addEventListener('scroll', () => { clearTimeout(st); st = setTimeout(save, 150); }, { passive: true });
+  addEventListener('pagehide', save);
+  // smooth scrolling only for clicks after the page is up (see html.smooth in site.css)
+  addEventListener('load', () => requestAnimationFrame(() => document.documentElement.classList.add('smooth')), { once: true });
+  if (returning) {
+    // the hash would win again on the next reload; the position is what matters now
+    if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    const go = () => scrollTo({ top: saved, behavior: 'instant' });
+    go();
+    // fonts and the plot change the page height after this script runs; restore again once layout settles
+    addEventListener('load', go, { once: true });
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+      .then(() => requestAnimationFrame(() => { go(); setTimeout(() => { go(); restoring = false; }, 250); }));
+  }
+}
