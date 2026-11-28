@@ -402,3 +402,11 @@ html{overflow-x:clip}
 .ptip span{white-space:nowrap} /* keep the '+' on the last word; .metric span's text-wrap:balance would otherwise let it drop to its own line */
 /* the hero point cloud never paints outside the hero, even for a frame during an iOS resize */
 #intro .fx{overflow:hidden}
+
+/* Round 20: Beyond code as museum labels: exhibit number + sphere key per card.
+   Keys are darkened toward the ink so the pale sphere colours (art, society) stay visible on paper. */
+.labels{counter-reset:lab}
+.label{counter-increment:lab}
+.label>div::before{content:"No. " counter(lab,decimal-leading-zero);display:block;margin-bottom:8px;font:400 var(--t-xs)/1.5 var(--f-mono);letter-spacing:.04em;color:var(--paper-mute)}
+:lang(de) .label>div::before{content:"Nr. " counter(lab,decimal-leading-zero)}
+.label h3::before{content:"";display:inline-block;width:8px;height:8px;margin-right:12px;vertical-align:.12em;background:color-mix(in srgb,var(--c,var(--paper-mute)) 70%,var(--paper-ink))}
