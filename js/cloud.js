@@ -43,6 +43,8 @@
     mx = my = tx = ty = 0;
     loop2();
   }
+  // on touch screens there is no cursor parallax: once every point has faded in, the frame never changes
+  const settled = t => touch && t - born > 1800;
   function inside(p, x, y) { for (const r of ex) if (x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) return true; return false; }
   function draw2(t) {
     const ctx = cv.getContext('2d');
@@ -62,7 +64,7 @@
   }
   function loop2() {
     cancelAnimationFrame(raf2);
-    const tick = t => { if (!visible) { raf2 = null; return; } draw2(t); if (!reduce) raf2 = requestAnimationFrame(tick); };
+    const tick = t => { if (!visible) { raf2 = null; return; } draw2(t); if (!reduce && !settled(t)) raf2 = requestAnimationFrame(tick); else raf2 = null; };
     raf2 = requestAnimationFrame(tick);
     if (reduce) draw2(performance.now());
   }
@@ -71,7 +73,7 @@
     tx = ((e.clientX - r.left) / r.width - .5) * 2; ty = ((e.clientY - r.top) / r.height - .5) * 2;
   });
   intro.addEventListener('pointerleave', () => { tx = ty = 0; });
-  const io = new IntersectionObserver(es => { const was = visible; visible = es[0].isIntersecting; if (visible && !was && !reduce && pts.length) { cancelAnimationFrame(raf2); const tick = t => { if (!visible) return; draw2(t); raf2 = requestAnimationFrame(tick); }; raf2 = requestAnimationFrame(tick); } }); io.observe(intro);
+  const io = new IntersectionObserver(es => { const was = visible; visible = es[0].isIntersecting; if (visible && !was && !reduce && pts.length && !settled(performance.now())) { cancelAnimationFrame(raf2); const tick = t => { if (!visible) return; draw2(t); raf2 = requestAnimationFrame(tick); }; raf2 = requestAnimationFrame(tick); } }); io.observe(intro);
   const go = () => build2(true);
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(go));
   let rt; const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => build2(false), 120); }); ro.observe(intro);

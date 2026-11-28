@@ -164,8 +164,7 @@
 @media (hover:none){.langsw a{min-height:44px}}
 
 /* Work: metric strip like the brand CV, then two one-line bullets */
-.wrow .meta{grid-column:1 / span 4}
-.wrow .body{grid-column:5 / span 8}
+@media (min-width:721px){.wrow .meta{grid-column:1 / span 4}.wrow .body{grid-column:5 / span 8}}
 .mstrip{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));border-top:1px solid var(--line-2);border-bottom:1px solid var(--line);margin:2px 0 var(--sp-4)}
 .mstrip .mc{padding:12px 16px 12px 0}
 .mstrip .mc + .mc{padding-left:16px;border-left:1px solid var(--line)}
@@ -174,7 +173,6 @@
 .mstrip[style*="--n:1"]{grid-template-columns:minmax(0,1fr)}
 .wrow ul{margin:0}
 .wrow .stack{display:block;margin-top:var(--sp-3)}
-@media (max-width:1024px){.wrow .body{grid-column:5 / span 8}}
 @media (max-width:600px){.wrow .body{grid-column:1 / -1}.mstrip{grid-template-columns:minmax(0,1fr)}.mstrip .mc + .mc{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
 
 /* Building: badge + external link in the right column */
@@ -393,3 +391,12 @@ html{overflow-x:clip}
  .label:nth-child(odd){padding-right:var(--sp-6)}
  .label:nth-child(even){padding-left:var(--sp-6);border-left:1px solid var(--paper-line)}
 }
+
+/* Round 19: mobile QA (iPhone 17 Pro, 402px) */
+/* status pill is cut off next to the scrolling links; the hero already shows the 'now' line */
+@media (max-width:800px){.nav .status{display:none}}
+/* section → plot links: full width, one line */
+@media (max-width:720px){.figlink{grid-column:1 / -1}}
+.ptip span{white-space:nowrap} /* keep the '+' on the last word; .metric span's text-wrap:balance would otherwise let it drop to its own line */
+/* the hero point cloud never paints outside the hero, even for a frame during an iOS resize */
+#intro .fx{overflow:hidden}

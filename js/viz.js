@@ -49,6 +49,7 @@
 .sky .cl.tk{animation:skytw var(--tw,6s) ease-in-out var(--twd,0s) infinite}
 @keyframes skytw{0%,100%{opacity:var(--o0,.2)}50%{opacity:.8}}
 .sky .gl{pointer-events:none}
+.sky.off .cl.tk,.sky.off .pulse{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.sky .pulse,.sky .cl.tk{animation:none}.sky .gl{display:none}.sky [data-s],.sky .traj,.sky .lab,.sky .cg,.sky .tw{transition:none}.sky .cg.em{transform:none}}
 .sky-hud{font-family:var(--f-mono);font-size:12px;line-height:1.5;color:var(--mute)}
 .sky-hud .k{color:var(--faint);display:flex;gap:8px;align-items:center;margin-bottom:8px}
@@ -274,7 +275,7 @@
           const [x, y] = pol(a, r), tt = unfrac((r - r0) / (R - r0));
           const cr = (0.6 + rnd() * 0.6).toFixed(2), op = (0.14 + rnd() * 0.21).toFixed(2);
           const c = el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: cr, class: 'cl', 'data-t': tt.toFixed(2), fill: 'currentColor', opacity: op }, gs);
-          if (tw() < 0.03) { c.classList.add('tk'); c.style.cssText = '--o0:' + op + ';--tw:' + (4 + tw() * 5).toFixed(1) + 's;--twd:-' + (tw() * 9).toFixed(1) + 's'; }
+          if (tw() < (narrow ? 0.02 : 0.03)) { c.classList.add('tk'); c.style.cssText = '--o0:' + op + ';--tw:' + (4 + tw() * 5).toFixed(1) + 's;--twd:-' + (tw() * 9).toFixed(1) + 's'; }
         }
       });
 
@@ -543,7 +544,8 @@
       const an = g.animate([{ transform: tf(0), opacity: 0 }, { transform: tf(1), opacity: .9, offset: .35 }, { transform: tf(0), opacity: 0 }], { duration: 1100, easing: 'ease-in-out' });
       an.onfinish = () => g.remove();
     }
-    const gio = new IntersectionObserver(es => { inView = es[0].isIntersecting; }); gio.observe(root);
+    const gio = new IntersectionObserver(es => { inView = es[0].isIntersecting; root.classList.toggle('off', !inView); }); gio.observe(root);
+    root.classList.add('off'); // until the observer reports it on screen
     glT = setTimeout(glint, 1500);
     const ro = new ResizeObserver(() => draw()); ro.observe(root);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
